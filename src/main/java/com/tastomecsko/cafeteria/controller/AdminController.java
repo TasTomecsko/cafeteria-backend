@@ -79,4 +79,9 @@ public class AdminController {
     public ResponseEntity<MenuResponse> getMenu(@PathVariable(value = "id") Integer id) {
         return new ResponseEntity<>(mealsService.getMenuById(id), HttpStatus.OK);
     }
+
+    @GetMapping("/menu/{id}/orders")
+    public ResponseEntity<OrdersResponse> getOrders(@PathVariable(value = "id") Integer id) {
+        return new ResponseEntity<>(mealsService.getOrdersFromMenu(id), HttpStatus.OK);
+    }
 }

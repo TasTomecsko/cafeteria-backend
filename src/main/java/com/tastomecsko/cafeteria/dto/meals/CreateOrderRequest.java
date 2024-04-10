@@ -2,6 +2,8 @@ package com.tastomecsko.cafeteria.dto.meals;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class CreateOrderRequest {
 
@@ -9,11 +11,5 @@ public class CreateOrderRequest {
 
     private Integer menuId;
 
-    private Integer mondayMealId;
-    private Integer tuesdayMealId;
-    private Integer wednesdayMealId;
-    private Integer thursdayMealId;
-    private Integer fridayMealId;
-    private Integer saturdayMealId;
-    private Integer sundayMealId;
+    private List<Integer> mealIdList;
 }

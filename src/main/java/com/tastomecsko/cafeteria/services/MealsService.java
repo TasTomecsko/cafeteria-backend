@@ -4,29 +4,29 @@ import com.tastomecsko.cafeteria.dto.jwt.JwtRequest;
 import com.tastomecsko.cafeteria.dto.meals.*;
 
 import java.util.List;
+import java.util.Map;
 
 public interface MealsService {
 
-    public void createMenu(CreateMenuRequest request);
+    void createMenu(CreateMenuRequest request);
 
-    public void modifyMenu(ModifyMenuRequest request);
+    void modifyMenu(ModifyMenuRequest request);
 
-    public void deleteMenu(Integer id);
+    void deleteMenu(Integer id);
 
-    public List<MenuTimeDetailResponse> getAllMenus();
+    List<MenuTimeDetailResponse> getAllMenus();
 
-    public List<MenuTimeDetailResponse> getCurrentMenusToSelect();
+    List<MenuTimeDetailResponse> getCurrentMenusToSelect();
 
-    public MenuResponse getMenuById(Integer menuId);
+    MenuResponse getMenuById(Integer menuId);
 
-    public MenuResponse createMeal(CreateMealRequest request);
+    MenuResponse createMeal(CreateMealRequest request);
 
-    public MenuResponse deleteMeal(DeleteMealRequest request);
+    MenuResponse deleteMeal(DeleteMealRequest request);
 
-    public void createOrder(CreateOrderRequest request);
+    SimpleMealResponse getMealForToday(JwtRequest request);
 
-    public MealResponse getMealForToday(JwtRequest request);
+    void createOrder(CreateOrderRequest request);
 
-
-    public void createTestData();
+    OrdersResponse getOrdersFromMenu(Integer menuId);
 }

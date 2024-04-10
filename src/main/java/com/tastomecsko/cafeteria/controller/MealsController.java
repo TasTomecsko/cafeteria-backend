@@ -1,8 +1,7 @@
 package com.tastomecsko.cafeteria.controller;
 
-import com.tastomecsko.cafeteria.dto.meals.CreateOrderRequest;
-import com.tastomecsko.cafeteria.dto.meals.MenuResponse;
-import com.tastomecsko.cafeteria.dto.meals.MenuTimeDetailResponse;
+import com.tastomecsko.cafeteria.dto.jwt.JwtRequest;
+import com.tastomecsko.cafeteria.dto.meals.*;
 import com.tastomecsko.cafeteria.services.MealsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -35,9 +34,8 @@ public class MealsController {
         return new ResponseEntity<>("Order created successfully", HttpStatus.CREATED);
     }
 
-    @GetMapping("/testData")
-    public ResponseEntity<String> addTestDate() {
-        mealsService.createTestData();
-        return new ResponseEntity<>("Test data added successfully", HttpStatus.CREATED);
+    @PostMapping("/order/meal")
+    public ResponseEntity<SimpleMealResponse> getMealForToday(@RequestBody JwtRequest request) {
+        return new ResponseEntity<>(mealsService.getMealForToday(request), HttpStatus.OK);
     }
 }

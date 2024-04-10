@@ -11,7 +11,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootApplication
 public class CafeteriaApplication implements CommandLineRunner {
-
 	public static void main(String[] args) {
 		SpringApplication.run(CafeteriaApplication.class, args);
 	}
@@ -41,7 +40,6 @@ public class CafeteriaApplication implements CommandLineRunner {
 
 			userRepository.save(admin);
 		}
-
 	}
 
 }

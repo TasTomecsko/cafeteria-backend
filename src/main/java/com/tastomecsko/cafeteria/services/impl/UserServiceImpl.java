@@ -4,10 +4,12 @@ import com.tastomecsko.cafeteria.dto.jwt.JwtRequest;
 import com.tastomecsko.cafeteria.dto.user.UserDataToUserResponse;
 import com.tastomecsko.cafeteria.dto.user.UserInfoResponse;
 import com.tastomecsko.cafeteria.dto.user.UserDataToAdminResponse;
+import com.tastomecsko.cafeteria.entities.Order;
 import com.tastomecsko.cafeteria.entities.User;
 import com.tastomecsko.cafeteria.entities.enums.Role;
 import com.tastomecsko.cafeteria.exception.user.FinalAdminDeletionException;
 import com.tastomecsko.cafeteria.exception.user.UserNotFoundException;
+import com.tastomecsko.cafeteria.repository.OrderRepository;
 import com.tastomecsko.cafeteria.repository.UserRepository;
 import com.tastomecsko.cafeteria.services.JWTService;
 import com.tastomecsko.cafeteria.services.UserService;
@@ -18,6 +20,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -27,6 +30,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     private final JWTService jwtService;
+
+    private final OrderRepository orderRepository;
 
     @Override
     public UserDetailsService userDetailsService() {
@@ -76,6 +81,19 @@ public class UserServiceImpl implements UserService {
                 );
             }
         }
+
+        List<Order> userOrders = new ArrayList<>();
+
+        for(int i = 0; i < userToDelete.getOrders().size(); i++) {
+            Order order = userToDelete.getOrders().get(i);
+            order.setUser(null);
+            if(order.getAvailableTo().before(new Date()))
+                orderRepository.delete(order);
+            else
+                userOrders.add(order);
+        }
+
+        orderRepository.saveAll(userOrders);
 
         userRepository.delete(userToDelete);
     }

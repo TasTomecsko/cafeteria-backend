@@ -1,24 +1,23 @@
-package com.tastomecsko.cafeteria.entities.meals;
+package com.tastomecsko.cafeteria.entities;
 
-import com.tastomecsko.cafeteria.entities.Menu;
-import com.tastomecsko.cafeteria.entities.Order;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Cascade;
 
+import java.util.Date;
 import java.util.List;
 
 @Entity
 @Data
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public abstract class BaseMeal {
+public class Meal {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     private String identification;
     private String description;
+    private Date dateOfMeal;
 
     @ManyToOne
     @JoinColumn(name = "menu")
