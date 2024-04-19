@@ -19,9 +19,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +30,6 @@ public class UserServiceImpl implements UserService {
     private final JWTService jwtService;
 
     private final OrderRepository orderRepository;
-
     @Override
     public UserDetailsService userDetailsService() {
         return new UserDetailsService() {
@@ -70,14 +67,20 @@ public class UserServiceImpl implements UserService {
 
     public void deleteUser(Integer id) {
         User userToDelete = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(
+                        "User not found with the provided id: " + id + "!",
+                        "Benutzer mit der angegebenen ID " + id + " nicht gefunden!",
+                        "Felhasználó nem található a megadott azonosítóval: " + id + "!"
+                ));
 
         if(userToDelete.getRole().equals(Role.ADMIN)) {
             List<User> adminList = userRepository.findAllByRole(Role.ADMIN);
 
             if(adminList.size() < 2) {
                 throw new FinalAdminDeletionException(
-                        "Deleting the last user with 'ADMIN' role will result in losing access to admin features!"
+                        "Deleting the last user with 'ADMIN' role will result in losing access to admin features!",
+                        "Das Löschen des letzten Benutzers mit der Rolle 'ADMINISTRATOR' führt zum Verlust des Zugriffs auf Administratorfunktionen!",
+                        "Az utolsó 'ADMINISZTRÁTOR' meghatalmazású felhasználó törlése az adminisztrátori funciók elvesztéséhez vezet!"
                 );
             }
         }
@@ -112,6 +115,7 @@ public class UserServiceImpl implements UserService {
 
     public UserDataToUserResponse getSingleUser(JwtRequest request) {
         String userEmail = jwtService.extractUserName(request.getToken());
+
         User user = userRepository.findByEmail(userEmail).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
 

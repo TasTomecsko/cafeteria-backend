@@ -53,8 +53,13 @@ public class MealsServiceImpl implements MealsService {
 
     //region Create Menu helper functions
     private void createMenuRequestIntegrityChecker(CreateMenuRequest request) {
-        if(new Date().after(new Date(request.getSelectionStart())))
-            throw new BadCreateMenuDetailsException("Menu selection date set before current date");
+        if(new Date().after(new Date(request.getSelectionStart()))) {
+            throw new BadCreateMenuDetailsException(
+                    "Menu selection date set before current date!",
+                    "Das Datum der Menüauswahl liegt vor dem aktuellen Datum!",
+                    "A menükiválasztás kezdete a mai dátum előtt van!"
+            );
+        }
 
         List<Menu> menusWithDateConflict = menuRepository.findAllByAvailableFromAfterAndAvailableFromBeforeOrAvailableToAfterAndAvailableToBeforeOrAvailableFromOrAvailableToOrAvailableFromBeforeAndAvailableToAfter(
                 new Date(request.getAvailableFrom()), new Date(request.getAvailableTo()), new Date(request.getAvailableFrom()),
@@ -63,23 +68,43 @@ public class MealsServiceImpl implements MealsService {
         );
 
         if(!menusWithDateConflict.isEmpty()) {
-            throw new MenuAlreadyExistsException("There is already a menu with the same starting date");
+            throw new MenuAlreadyExistsException(
+                    "There is a menu or menus overlapping with the provided availability period!",
+                    "Es gibt ein oder mehrere Menüs, die sich mit dem angegebenen Verfügbarkeitszeitraum überschneiden!",
+                    "Egy vagy több menü is átfedésben van a megadott elérhetőségi időintervallummal!"
+            );
         }
 
         if(!isMenuDTOFilledOut(request)) {
-            throw new BadCreateMenuDetailsException("Cannot create menu due to missing time data");
+            throw new BadCreateMenuDetailsException(
+                    "Cannot create menu due to missing dates!",
+                    "Menü kann aufgrund fehlender Daten nicht erstellt werden!",
+                    "A menü nem hozható létre hiányzó dátumok miatt!"
+            );
         }
 
         if(new Date(request.getSelectionEnd()).before(new Date(request.getSelectionStart()))) {
-            throw new BadCreateMenuDetailsException("Selection end date cannot be before selection start date");
+            throw new BadCreateMenuDetailsException(
+                    "Selection end date cannot be before selection start date!",
+                    "Das Enddatum der Auswahl darf nicht vor dem Startdatum der Auswahl liegen!",
+                    "A kiválasztás kezdődátuma nem lehet a kiválasztás végdátuma előtt!"
+            );
         }
 
         if(new Date(request.getAvailableTo()).before(new Date(request.getAvailableFrom()))) {
-            throw new BadCreateMenuDetailsException("Availability end date cannot be before availability star date");
+            throw new BadCreateMenuDetailsException(
+                    "Availability end date cannot be before availability star date!",
+                    "Das Enddatum der Verfügbarkeit darf nicht vor dem Startdatum der Verfügbarkeit liegen!",
+                    "Az elérhetőség végdátuma nem lehet az elérhetőség kezdődátuma előtt!"
+            );
         }
 
         if(new Date(request.getAvailableFrom()).before(new Date(request.getSelectionEnd()))) {
-            throw new BadCreateMenuDetailsException("Selection period ends after availability period starts");
+            throw new BadCreateMenuDetailsException(
+                    "Selection period ends after availability period starts!",
+                    "Der Auswahlzeitraum endet nach Beginn des Verfügbarkeitszeitraums!",
+                    "A kiválasztási időszak az elérhetőség kezdete után ér véget!"
+            );
         }
     }
 
@@ -111,13 +136,22 @@ public class MealsServiceImpl implements MealsService {
         Optional<Menu> optionalMenu = menuRepository.findById(request.getMenuId());
 
         if(optionalMenu.isEmpty()) {
-            throw new MenuNotFoundException("Menu not found with id: " + request.getMenuId());
+            throw new MenuNotFoundException(
+                    "Menu not found with id: " + request.getMenuId() + "!",
+                    "Menü mit ID: " + request.getMenuId()  + " nicht gefunden!",
+                    "Nem található menü a megadott " + request.getMenuId() + " azonosítóval!"
+            );
         }
 
         Menu menuToModify = optionalMenu.get();
 
-        if(menuToModify.getSelectionStart().before(new Date()))
-            throw new BadModifyMenuDetailsException("Menu selection has started, you can't modify the menu anymore!");
+        if(menuToModify.getSelectionStart().before(new Date())) {
+            throw new BadModifyMenuDetailsException(
+                    "Menu selection has started, you can't modify the menu anymore!",
+                    "Die Menüauswahl hat begonnen. Sie können das Menü nicht mehr ändern!",
+                    "A menükiválasztás már elkezdődött, ezt a menüt már nem lehet módosítani!"
+            );
+        }
 
         if(!request.getSelectionStart().toString().isEmpty() || !request.getSelectionStart().toString().isBlank()) {
             menuToModify.setSelectionStart(new Date(request.getSelectionStart()));
@@ -144,7 +178,11 @@ public class MealsServiceImpl implements MealsService {
 
     private void modifyMenuRequestIntegrityChecker(ModifyMenuRequest request, Menu menu) {
         if(new Date().after(new Date(request.getSelectionStart())))
-            throw new BadModifyMenuDetailsException("Menu selection date set before current date");
+            throw new BadModifyMenuDetailsException(
+                    "Menu selection date set before current date!",
+                    "Das Datum der Menüauswahl liegt vor dem aktuellen Datum!",
+                    "A menükiválasztás időpontja a mai dátum előtti időpontra esik!"
+            );
 
         List<Menu> menusWithDateConflict = menuRepository.findAllByAvailableFromAfterAndAvailableFromBeforeOrAvailableToAfterAndAvailableToBeforeOrAvailableFromOrAvailableToOrAvailableFromBeforeAndAvailableToAfter(
                 menu.getAvailableFrom(), menu.getAvailableTo(), menu.getAvailableFrom(), menu.getAvailableTo(), menu.getAvailableFrom(),
@@ -154,33 +192,58 @@ public class MealsServiceImpl implements MealsService {
 
         if(!menusWithDateConflict.isEmpty()) {
             if(menusWithDateConflict.size() > 1) {
-                throw new MenuAlreadyExistsException("There is an existing menu overlapping with the provided availability start date");
+                throw new MenuAlreadyExistsException(
+                        "There is a menu or menus overlapping with the provided availability period!",
+                        "Es gibt ein oder mehrere Menüs, die sich mit dem angegebenen Verfügbarkeitszeitraum überschneiden!",
+                        "Egy vagy több menü is átfedésben van a megadott elérhetőségi időintervallummal!"
+                );
             }
             else {
                 if(!menusWithDateConflict.get(0).getId().equals(menu.getId())) {
-                    throw new MenuAlreadyExistsException("There is an existing menu overlapping with the start date");
+                    throw new MenuAlreadyExistsException(
+                            "There is a menu or menus overlapping with the provided availability period!",
+                            "Es gibt ein oder mehrere Menüs, die sich mit dem angegebenen Verfügbarkeitszeitraum überschneiden!",
+                            "Egy vagy több menü is átfedésben van a megadott elérhetőségi időintervallummal!"
+                    );
                 }
             }
         }
 
         if(new Date(request.getSelectionEnd()).before(new Date(request.getSelectionStart()))) {
-            throw new BadModifyMenuDetailsException("Selection end date cannot be before selection start date");
+            throw new BadModifyMenuDetailsException(
+                    "Selection end date cannot be before selection start date!",
+                    "Das Enddatum der Auswahl darf nicht vor dem Startdatum der Auswahl liegen!",
+                    "A menüválasztási időszak vége nem lehet a kiválasztási időszak kezdete előtt!"
+            );
         }
 
         if(new Date(request.getAvailableTo()).before(new Date(request.getAvailableFrom()))) {
-            throw new BadModifyMenuDetailsException("Availability end date cannot be before availability star date");
+            throw new BadModifyMenuDetailsException(
+                    "Availability end date cannot be before availability star date!",
+                    "Das Enddatum der Verfügbarkeit darf nicht vor dem Startdatum der Verfügbarkeit liegen!",
+                    "A menüelérhetőségi időszak vége nem lehet az elérhetőségi időszak kezdete előtt!"
+            );
         }
 
         if(new Date(request.getAvailableFrom()).before(new Date(request.getSelectionEnd()))) {
-            throw new BadModifyMenuDetailsException("Selection period ends after availability starts");
+            throw new BadModifyMenuDetailsException(
+                    "Selection period ends after availability period starts!",
+                    "Der Auswahlzeitraum endet nach Beginn des Verfügbarkeitszeitraums!",
+                    "A kiválasztási időszak az elérhetőség kezdete után ér véget!"
+            );
         }
     }
 
     public void deleteMenu(Integer id) {
         Optional<Menu> optionalMenu = menuRepository.findById(id);
 
-        if(optionalMenu.isEmpty())
-            throw new MenuNotFoundException("Menu not found with id: " + id);
+        if(optionalMenu.isEmpty()) {
+            throw new MenuNotFoundException(
+                    "Menu not found with id: " + id + "!",
+                    "Menü mit ID: " + id  + " nicht gefunden!",
+                    "Nem található menü a megadott " + id + " azonosítóval!"
+            );
+        }
 
         Menu menuToDelete = optionalMenu.get();
 
@@ -239,8 +302,13 @@ public class MealsServiceImpl implements MealsService {
         MenuResponse response = new MenuResponse();
         Optional<Menu> optionalCurrentMenu = menuRepository.findById(menuId);
 
-        if(optionalCurrentMenu.isEmpty())
-            throw new MenuNotFoundException("No menu found with the provided id: " + menuId);
+        if(optionalCurrentMenu.isEmpty()) {
+            throw new MenuNotFoundException(
+                    "Menu not found with id: " + menuId + "!",
+                    "Menü mit ID: " + menuId  + " nicht gefunden!",
+                    "Nem található menü a megadott " + menuId + " azonosítóval!"
+            );
+        }
 
         Menu currentMenu = optionalCurrentMenu.get();
 
@@ -284,21 +352,41 @@ public class MealsServiceImpl implements MealsService {
     public MenuResponse createMeal(CreateMealRequest request) {
         Optional<Menu> optionalMenu = menuRepository.findById(request.getMenuId());
 
-        if(optionalMenu.isEmpty())
-            throw new MenuNotFoundException("Menu not found with the provided id");
+        if(optionalMenu.isEmpty()) {
+            throw new MenuNotFoundException(
+                    "Menu not found with id: " + request.getMenuId() + "!",
+                    "Menü mit ID: " + request.getMenuId()  + " nicht gefunden!",
+                    "Nem található menü a megadott " + request.getMenuId() + " azonosítóval!"
+            );
+        }
 
-        if(request.getDateOfMeal() == null || request.getDateOfMeal().toString().isEmpty() || request.getDateOfMeal().toString().isBlank())
-            throw new BadCreateMealRequestException("No date of meal data provided!");
+        if(request.getDateOfMeal() == null || request.getDateOfMeal().toString().isEmpty() || request.getDateOfMeal().toString().isBlank()) {
+            throw new BadCreateMealRequestException(
+                        "No date of meal data provided!",
+                        "Es wurden keine Daten zum Datum der Mahlzeit angegeben!",
+                        "Az étkezés dátuma nem volt megadva!"
+            );
+        }
 
         Menu menu = optionalMenu.get();
 
         Date dateOfMeal = new Date(request.getDateOfMeal() + 43200000L);
 
-        if(menu.getSelectionStart().before(new Date()))
-            throw new BadCreateMealRequestException("Menu selection has started, you can't modify the meals anymore!");
+        if(menu.getSelectionStart().before(new Date())) {
+            throw new BadCreateMealRequestException(
+                        "Menu selection has started, you can't modify the menu anymore!",
+                        "Die Menüauswahl hat begonnen. Sie können das Menü nicht mehr ändern!",
+                        "A menükiválasztás már elkezdődött, ezt a menüt már nem lehet módosítani!"
+            );
+        }
 
-        if(dateOfMeal.before(menu.getAvailableFrom()) || dateOfMeal.after(menu.getAvailableTo()))
-            throw new BadCreateMealRequestException("The date of the meal falls out of the range defined in the menu!");
+        if(dateOfMeal.before(menu.getAvailableFrom()) || dateOfMeal.after(menu.getAvailableTo())) {
+            throw new BadCreateMealRequestException(
+                    "The date of the meal falls out of the range defined in the menu!",
+                    "Das Datum der Mahlzeit liegt außerhalb des im Menü definierten Bereichs!",
+                    "Az étkezés időpontja kívülesik a megadott elérhetőségi intervallumból!"
+            );
+        }
 
         Meal meal = new Meal();
         List<Meal> mealList = menu.getMeals();
@@ -320,13 +408,23 @@ public class MealsServiceImpl implements MealsService {
     public MenuResponse deleteMeal(DeleteMealRequest request) {
         Optional<Menu> optionalMenu = menuRepository.findById(request.getMenuId());
 
-        if(optionalMenu.isEmpty())
-            throw new MenuNotFoundException("No menu found with the provided id");
+        if(optionalMenu.isEmpty()) {
+            throw new MenuNotFoundException(
+                    "Menu not found with id: " + request.getMenuId() + "!",
+                    "Menü mit ID: " + request.getMenuId()  + " nicht gefunden!",
+                    "Nem található menü a megadott " + request.getMenuId() + " azonosítóval!"
+            );
+        }
 
         Menu menu = optionalMenu.get();
 
-        if(menu.getSelectionStart().before(new Date()))
-            throw new BadDeleteMealRequestException("Menu selection has started, you can't modify the meals anymore!");
+        if(menu.getSelectionStart().before(new Date())) {
+            throw new BadDeleteMealRequestException(
+                    "Menu selection has started, you can't modify the menu anymore!",
+                    "Die Menüauswahl hat begonnen. Sie können das Menü nicht mehr ändern!",
+                    "A menükiválasztás már elkezdődött, ezt a menüt már nem lehet módosítani!"
+            );
+        }
 
         try {
             mealRepository.deleteById(request.getMealId());
@@ -334,7 +432,11 @@ public class MealsServiceImpl implements MealsService {
             return menuToMenuResponseDTO(menuRepository.save(menu));
         }
         catch (Exception exception) {
-            throw new BadDeleteMealRequestException("Meal not found with the provided id: " + request.getMealId());
+            throw new BadDeleteMealRequestException(
+                    "Meal not found with the provided id: " + request.getMealId() + "!",
+                    "Mahlzeit mit der angegebenen ID " + request.getMealId() + " nicht gefunden!",
+                    "Nem található étel a megadott " + request.getMealId() + " azonosítóval!"
+            );
         }
     }
 
@@ -398,7 +500,11 @@ public class MealsServiceImpl implements MealsService {
                 new UsernameNotFoundException("User not found"));
 
         Menu menu = menuRepository.findById(request.getMenuId()).orElseThrow(() ->
-                new MenuNotFoundException("No menu found with the provided id"));
+                new MenuNotFoundException(
+                        "Menu not found with id: " + request.getMenuId() + "!",
+                        "Menü mit ID: " + request.getMenuId()  + " nicht gefunden!",
+                        "Nem található menü a megadott " + request.getMenuId() + " azonosítóval!"
+                ));
 
         Order order = new Order();
 
@@ -417,9 +523,16 @@ public class MealsServiceImpl implements MealsService {
         List<Meal> mealsToSave = new ArrayList<>();
 
         for(int i = 0; i < request.getMealIdList().size(); i++) {
-            if(request.getMealIdList().get(i) != null)
+            if(request.getMealIdList().get(i) != null) {
+                int notFoundId = request.getMealIdList().get(i);
                 mealsToSave.add(mealRepository.findById(request.getMealIdList().get(i)).orElseThrow(() ->
-                        new MealNotFoundException("No meal found with the provided id")));
+                        new MealNotFoundException(
+                                "Meal not found with the provided id: " + notFoundId + "!",
+                                "Mahlzeit mit der angegebenen ID " + notFoundId + " nicht gefunden!",
+                                "Nem található étel a megadott " + notFoundId + " azonosítóval!"
+                        )
+                ));
+            }
         }
 
         order.setMeals(mealsToSave);
@@ -430,8 +543,13 @@ public class MealsServiceImpl implements MealsService {
     public OrdersResponse getOrdersFromMenu(Integer menuId) {
         Optional<Menu> optionalMenu = menuRepository.findById(menuId);
 
-        if(optionalMenu.isEmpty())
-            throw new MenuNotFoundException("Menu not found with the provided id");
+        if(optionalMenu.isEmpty()) {
+            throw new MenuNotFoundException(
+                    "Menu not found with id: " + menuId + "!",
+                    "Menü mit ID: " + menuId  + " nicht gefunden!",
+                    "Nem található menü a megadott " + menuId + " azonosítóval!"
+            );
+        }
 
         Menu menu = optionalMenu.get();
         OrdersResponse response = new OrdersResponse();

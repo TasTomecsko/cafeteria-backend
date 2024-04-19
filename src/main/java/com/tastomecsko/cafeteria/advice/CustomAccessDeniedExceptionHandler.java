@@ -10,6 +10,9 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 @Component
 public class CustomAccessDeniedExceptionHandler implements AccessDeniedHandler {
 
@@ -22,11 +25,21 @@ public class CustomAccessDeniedExceptionHandler implements AccessDeniedHandler {
         response.setContentType("application/json;charset=UTF-8");
 
         CustomErrorResponse errorResponse = new CustomErrorResponse();
+        Map<String, String> localizedTitle = new HashMap<>();
+        Map<String, String> localizedMessage = new HashMap<>();
 
-        errorResponse.setTitle("Forbidden");
+        localizedTitle.put("eng", "Forbidden");
+        localizedTitle.put("de", "Verboten");
+        localizedTitle.put("hu", "Illetéktelen");
+        errorResponse.setTitle(localizedTitle);
+
         errorResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
         errorResponse.setDetail(accessDeniedException.getMessage());
-        errorResponse.setMessage("Unauthorized access");
+
+        localizedMessage.put("eng", "Unauthorized access");
+        localizedMessage.put("de", "Unautorisierter Zugriff");
+        localizedMessage.put("hu", "Illetéktelen hozzáférés");
+        errorResponse.setMessage(localizedMessage);
 
         response.getWriter().write(objectMapper.writeValueAsString(
             errorResponse

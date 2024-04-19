@@ -36,16 +36,28 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     public void signup(SignUpRequest signUpRequest) {
         if(!signUpRequestIsValid(signUpRequest)) {
-            throw new BadSignupCredentialsException("Invalid values");
+            throw new BadSignupCredentialsException(
+                    "User creation failed, invalid data provided!",
+                    "Benutzererstellung fehlgeschlagen, ungültige Daten angegeben!",
+                    "Sikertelen felhasználó regisztráció, hibás adatok voltak megadva!"
+            );
         }
 
         User user = new User();
 
         if(signUpRequest.getRole() > Role.values().length - 1) {
-            throw new BadSignupCredentialsException("Invalid role");
+            throw new BadSignupCredentialsException(
+                    "User creation failed, ivalid role provided!",
+                    "Benutzererstellung fehlgeschlagen, gültige Rolle angegeben!",
+                    "Sikertelen felhasználó regisztráció, nem elfogadható meghatalmazás volt megadva!"
+            );
         }
         else if(signUpRequest.getRole() < 0) {
-            throw new BadSignupCredentialsException("Invalid role");
+            throw new BadSignupCredentialsException(
+                    "User creation failed, ivalid role provided!",
+                    "Benutzererstellung fehlgeschlagen, gültige Rolle angegeben!",
+                    "Sikertelen felhasználó regisztráció, nem elfogadható meghatalmazás volt megadva!"
+            );
         }
 
         switch (signUpRequest.getRole()) {
@@ -86,6 +98,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         ));
         var user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(() ->
                 new IllegalArgumentException("Invalid email or password"));
+
         var jwt = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(new HashMap<>(), user);
 
@@ -127,11 +140,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.setPassword(passwordEncoder.encode(request.getNewPassword()));
             }
             else {
-                throw new BadUserInformationUpdateException("Old password incorrect");
+                throw new BadUserInformationUpdateException(
+                        "The 'Old password' you provided does not match with the current password!",
+                        "Das von Ihnen angegebene ‚Alte Passwort‘ stimmt nicht mit dem aktuellen Passwort überein!",
+                        "A megadott 'Régi jelszó' nem egyezik a jelenlegi jelszóval!"
+                );
             }
         }
         else {
-            throw new BadUserInformationUpdateException("User update details are incomplete");
+            throw new BadUserInformationUpdateException(
+                    "Failed to update user information, crucial data was missing!",
+                    "Benutzerinformationen konnten nicht aktualisiert werden, wichtige Daten fehlten!",
+                    "Nem sikerült frissíteni a felhasználói adatokat, fontos információk hiányoztak!"
+            );
         }
 
         final User updated = userRepository.save(user);
